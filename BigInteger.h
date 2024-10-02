@@ -10,15 +10,18 @@ public:
 	BigInteger(long long);
 	BigInteger(const std::string&);
 
-	size_t size() const;
+	size_t integerSize() const;
 	std::string toString() const;
 
-	int& operator[](size_t index);
-	const int& operator[](size_t index) const;
+	int& operator[](size_t);
+	const int& operator[](size_t) const;
 
 private:
-	// перва€ €чейка знак, остальные - число
+	// число хранитс€ в data в перевЄрнутом виде дл€ простоты операций
+
 	std::vector<int> data;
+	size_t size;
+	bool isNegative;
 };
 
 BigInteger operator""_bi(unsigned long long);

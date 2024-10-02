@@ -12,49 +12,51 @@ namespace
 	}
 }
 
-BigInteger::BigInteger(long long x) : data(20)
+BigInteger::BigInteger(long long x) : data(), isNegative(false), size(0)
 {
-	x < 0 ? data[0] = -1 : data[0] = 1;
+	if (x < 0)
+	{
+		isNegative = true;
+		x *= -1;
+	}
 
-	size_t ind = 19;
 	while (x != 0)
 	{
-		data[ind--] = x % 10 * data[0];
+		data.push_back(x % 10);
+		++size;
 		x /= 10;
 	}
 }
 
-BigInteger::BigInteger(const std::string& str) : data{}
+BigInteger::BigInteger(const std::string& str) : data(), isNegative(false), size(0)
 {
 	data.reserve(str.size());
 	std::string goodStr = getStringWithoutSpace(str);
-	auto it = goodStr.cbegin();
 
 	if (goodStr[0] == '-')
 	{
-		data.push_back(-1);
-		++it;
+		isNegative = true;
+		goodStr.erase(0, 1);
 	}
-	else
-		data.push_back(1);
 
-	while (it < goodStr.cend())
+	size = goodStr.size();
+	auto it = goodStr.crbegin();
+	while (it != goodStr.crend())
 	{
 		data.push_back(*it++ - 48);
-		std::cout << this->toString() << "\n";
 	}
 }
 
-size_t BigInteger::size() const
+size_t BigInteger::integerSize() const
 {
-	return data.size() - 1; // тк храним ещё знак
+	return size;
 }
 
 std::string BigInteger::toString() const
 {
-	std::string answ{ data[0] < 0 ? "-" : "" };
-	for (size_t ind = 1; ind < data.size(); ++ind)
-		answ += std::to_string(data[ind]);
+	std::string answ{ isNegative ? "-" : "" };
+	for (auto it = data.crbegin(); it != data.crend(); ++it)
+		answ += std::to_string(*it);
 	return answ; // RVO
 }
 
