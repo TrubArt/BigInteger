@@ -1,4 +1,4 @@
-#include "BigInteger.h"
+﻿#include "BigInteger.h"
 
 namespace
 {
@@ -12,11 +12,11 @@ namespace
 	}
 }
 
-BigInteger::BigInteger(long long x) : data(), isNegative(false), size(0)
+BigInteger::BigInteger(long long x) : data(), isNegat(false), size(0)
 {
 	if (x < 0)
 	{
-		isNegative = true;
+		isNegat = true;
 		x *= -1;
 	}
 
@@ -28,14 +28,14 @@ BigInteger::BigInteger(long long x) : data(), isNegative(false), size(0)
 	}
 }
 
-BigInteger::BigInteger(const std::string& str) : data(), isNegative(false), size(0)
+BigInteger::BigInteger(const std::string& str) : data(), isNegat(false), size(0)
 {
 	data.reserve(str.size());
 	std::string goodStr = getStringWithoutSpace(str);
 
 	if (goodStr[0] == '-')
 	{
-		isNegative = true;
+		isNegat = true;
 		goodStr.erase(0, 1);
 	}
 
@@ -51,6 +51,9 @@ BigInteger::BigInteger(const std::string& str) : data(), isNegative(false), size
 
 void BigInteger::shrinkToFit()
 {	
+	if (isNULL())
+		return;
+
 	auto lastSpace = data.end();
 	auto firstSpace = lastSpace - 1;
 	while (*firstSpace == 0)
@@ -61,14 +64,27 @@ void BigInteger::shrinkToFit()
 	data.erase(firstSpace + 1, lastSpace);
 }
 
-size_t BigInteger::integerSize() const
+bool BigInteger::isNULL() const
+{
+	for (const auto& i : data)
+		if (i != 0)
+			return false;
+	return true;
+}
+
+bool BigInteger::isNegative() const
+{
+	return isNegat;
+}
+
+size_t BigInteger::intSize() const
 {
 	return size;
 }
 
 std::string BigInteger::toString() const
 {
-	std::string answ{ isNegative ? "-" : "" };
+	std::string answ{ isNegat ? "-" : "" };
 	for (auto it = data.crbegin(); it != data.crend(); ++it)
 		answ += std::to_string(*it);
 	return answ; // RVO
@@ -88,6 +104,100 @@ const int& BigInteger::operator[](size_t index) const
 		throw "fatal index";
 	return data[size - 1 - index];
 }
+
+BigInteger BigInteger::operator+() const
+{
+	return *this;
+}
+
+BigInteger BigInteger::operator-() const
+{
+	BigInteger negative(*this);
+	negative.isNegat = !isNegat;
+	return negative;
+}
+
+
+bool operator==(const BigInteger& a, const BigInteger& b)
+{
+	if (a.intSize() != b.intSize())
+		return false;
+	if (a.isNegative() != b.isNegative())
+		return false;
+
+	std::string astr = a.toString();
+	std::string bstr = b.toString();
+
+	for (size_t ind = 0, size = astr.size(); ind < size; ++ind)
+	{
+		if (astr[ind] != bstr[ind])
+			return false;
+	}
+	return true;
+}
+
+bool operator!=(const BigInteger& a, const BigInteger& b)
+{
+	return !(a == b);
+}
+
+bool operator<(const BigInteger& a, const BigInteger& b)
+{
+	if (a.isNegative() ^ b.isNegative())	// разные знаки
+	{
+		if (a.isNegative())
+			return true;
+		return false;
+	}
+
+	std::string astr = a.toString();
+	std::string bstr = b.toString();
+	if (a.isNegative())						// если оба числа отрицательные
+	{
+		if (a.intSize() > b.intSize())		// сравнение размерностей
+			return true;
+
+		for (size_t ind = 0, size = astr.size(); ind < size; ++ind)
+		{
+			if (astr[ind] != bstr[ind])
+			{
+				if (astr[ind] > bstr[ind])
+					return true;
+				return false;
+			}
+		}
+		return false; // случай равенства
+	}
+
+	if (a.intSize() > b.intSize())		// сравнение размерностей
+		return false;
+	for (size_t ind = 0, size = astr.size(); ind < size; ++ind)
+	{
+		if (astr[ind] != bstr[ind])
+		{
+			if (astr[ind] > bstr[ind])
+				return false;
+			return true;
+		}
+	}
+	return false; // случай равенства
+}
+
+bool operator<=(const BigInteger& a, const BigInteger& b)
+{
+	return !(a > b);
+}
+
+bool operator>(const BigInteger& a, const BigInteger& b)
+{
+	return b < a;
+}
+
+bool operator>=(const BigInteger& a, const BigInteger& b)
+{
+	return !(a < b);
+}
+
 
 BigInteger operator""_bi(unsigned long long x)
 {

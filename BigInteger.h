@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include <iostream>
 #include <vector>
 #include <string>
@@ -10,20 +10,31 @@ public:
 	BigInteger(long long);
 	BigInteger(const std::string&);
 
-	void shrinkToFit();
-	size_t integerSize() const;
+	bool isNULL() const;
+	bool isNegative() const;
+	size_t intSize() const;
 	std::string toString() const;
 
 	int& operator[](size_t);
 	const int& operator[](size_t) const;
+	BigInteger operator+() const;
+	BigInteger operator-() const;
 
 private:
-	// число хранится в data в перевёрнутом виде для простоты операций
+	void shrinkToFit();
+	// С‡РёСЃР»Рѕ С…СЂР°РЅРёС‚СЃСЏ РІ data РІ РїРµСЂРµРІС‘СЂРЅСѓС‚РѕРј РІРёРґРµ РґР»СЏ РїСЂРѕСЃС‚РѕС‚С‹ РѕРїРµСЂР°С†РёР№
 
 	std::vector<int> data;
 	size_t size;
-	bool isNegative;
+	bool isNegat;
 };
+
+bool operator==(const BigInteger&, const BigInteger&);
+bool operator!=(const BigInteger&, const BigInteger&);
+bool operator<(const BigInteger&, const BigInteger&);
+bool operator<=(const BigInteger&, const BigInteger&);
+bool operator>(const BigInteger&, const BigInteger&);
+bool operator>=(const BigInteger&, const BigInteger&);
 
 BigInteger operator""_bi(unsigned long long);
 std::ostream& operator<<(std::ostream&, const BigInteger&);
