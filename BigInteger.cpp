@@ -45,6 +45,20 @@ BigInteger::BigInteger(const std::string& str) : data(), isNegative(false), size
 	{
 		data.push_back(*it++ - 48);
 	}
+
+	shrinkToFit();
+}
+
+void BigInteger::shrinkToFit()
+{	
+	auto lastSpace = data.end();
+	auto firstSpace = lastSpace - 1;
+	while (*firstSpace == 0)
+	{
+		--firstSpace;
+		--size;
+	}
+	data.erase(firstSpace + 1, lastSpace);
 }
 
 size_t BigInteger::integerSize() const
@@ -65,14 +79,14 @@ int& BigInteger::operator[](size_t index)
 	if (index >= data.size())
 		throw "fatal index";
 
-	return data[index];
+	return data[size - 1 - index];
 }
 
 const int& BigInteger::operator[](size_t index) const
 {
 	if (index >= data.size())
 		throw "fatal index";
-	return data[index];
+	return data[size - 1 - index];
 }
 
 BigInteger operator""_bi(unsigned long long x)

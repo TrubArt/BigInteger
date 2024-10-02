@@ -10,6 +10,7 @@ public:
 	BigInteger(long long);
 	BigInteger(const std::string&);
 
+	void shrinkToFit();
 	size_t integerSize() const;
 	std::string toString() const;
 
