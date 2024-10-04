@@ -12,8 +12,15 @@ namespace
 	}
 }
 
+BigInteger::BigInteger() : BigInteger(0) 
+{}
+
 BigInteger::BigInteger(long long x) : data(), isNegat(false), size(0)
 {
+	if (x == 0)
+	{
+		increaseData(0);
+	}
 	if (x < 0)
 	{
 		isNegat = true;
@@ -22,8 +29,7 @@ BigInteger::BigInteger(long long x) : data(), isNegat(false), size(0)
 
 	while (x != 0)
 	{
-		data.push_back(x % 10);
-		++size;
+		increaseData(x % 10);
 		x /= 10;
 	}
 }
@@ -39,11 +45,10 @@ BigInteger::BigInteger(const std::string& str) : data(), isNegat(false), size(0)
 		goodStr.erase(0, 1);
 	}
 
-	size = goodStr.size();
 	auto it = goodStr.crbegin();
 	while (it != goodStr.crend())
 	{
-		data.push_back(*it++ - 48);
+		increaseData(*it++ - 48);
 	}
 
 	shrinkToFit();
@@ -62,6 +67,12 @@ void BigInteger::shrinkToFit()
 		--size;
 	}
 	data.erase(firstSpace + 1, lastSpace);
+}
+
+void BigInteger::increaseData(int value)
+{
+	data.push_back(value);
+	++size;
 }
 
 bool BigInteger::isNULL() const
@@ -117,6 +128,82 @@ BigInteger BigInteger::operator-() const
 	return negative;
 }
 
+BigInteger& BigInteger::operator+=(const BigInteger& x)
+{
+	if (isNegat && x.isNegat)			// - -
+	{
+		isNegat = false;	// так быстрее,чем арифметические операции
+		return (this->operator+=(-x));
+		isNegat = true;
+		return *this;
+	}
+	if (isNegat)						// - +
+	{
+		isNegat = false;
+		return *this = x - *this;	// ?избавиться от копирования?
+	}
+	if (!isNegat && x.isNegat)			// + -
+		return this->operator-=(-x);
+
+
+	size_t minSize = std::min(size, x.size);
+	size_t maxSize = std::max(size, x.size);
+	int transfer = 0;	// остаток
+
+	// вычисление совпадающих разрядов
+	int sum = 0;
+	for (size_t index = 0; index < minSize; ++index)
+	{
+		sum = data[index] + x.data[index] + transfer;
+		transfer = sum / 10;
+		data[index] = sum % 10;
+	}
+
+	// вычисление оставшихся разрядов
+	if (minSize == size)	// if вынесен за пределы цикла ради уменьшения числа итераций
+	{
+		for (size_t count = minSize; count < maxSize; ++count)
+		{
+			sum = x.data[count] + transfer;
+			transfer = sum / 10;
+			increaseData(sum % 10);
+		}
+	}
+	else
+	{
+		for (size_t count = minSize; count < maxSize; ++count)
+		{
+			sum = data[count] + transfer;
+			transfer = sum / 10;
+			data[count] = sum % 10;
+		}
+	}
+
+	if (transfer == 1)
+		increaseData(1);
+
+	return *this;
+}
+
+BigInteger& BigInteger::operator-=(const BigInteger& x)
+{
+	return *this;
+}
+
+BigInteger& BigInteger::operator*=(const BigInteger& x)
+{
+	return *this;
+}
+
+BigInteger& BigInteger::operator/=(const BigInteger& x)
+{
+	return *this;
+}
+
+BigInteger& BigInteger::operator%=(const BigInteger& x)
+{
+	return *this;
+}
 
 bool operator==(const BigInteger& a, const BigInteger& b)
 {
@@ -196,6 +283,41 @@ bool operator>(const BigInteger& a, const BigInteger& b)
 bool operator>=(const BigInteger& a, const BigInteger& b)
 {
 	return !(a < b);
+}
+
+BigInteger operator+(const BigInteger& a, const BigInteger& b)
+{
+	BigInteger tmp = a;
+	tmp += b;
+	return tmp;
+}
+
+BigInteger operator-(const BigInteger& a, const BigInteger& b)
+{
+	BigInteger tmp = a;
+	tmp -= b;
+	return tmp;
+}
+
+BigInteger operator*(const BigInteger& a, const BigInteger& b)
+{
+	BigInteger tmp = a;
+	tmp *= b;
+	return tmp;
+}
+
+BigInteger operator/(const BigInteger& a, const BigInteger& b)
+{
+	BigInteger tmp = a;
+	tmp /= b;
+	return tmp;
+}
+
+BigInteger operator%(const BigInteger& a, const BigInteger& b)
+{
+	BigInteger tmp = a;
+	tmp %= b;
+	return tmp;
 }
 
 

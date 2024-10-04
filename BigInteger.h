@@ -6,7 +6,7 @@
 class BigInteger
 {
 public:
-	BigInteger() = delete;
+	BigInteger();
 	BigInteger(long long);
 	BigInteger(const std::string&);
 
@@ -19,9 +19,15 @@ public:
 	const int& operator[](size_t) const;
 	BigInteger operator+() const;
 	BigInteger operator-() const;
+	BigInteger& operator+=(const BigInteger&);
+	BigInteger& operator-=(const BigInteger&);
+	BigInteger& operator*=(const BigInteger&);
+	BigInteger& operator/=(const BigInteger&);
+	BigInteger& operator%=(const BigInteger&);
 
 private:
 	void shrinkToFit();
+	void increaseData(int);
 	// число хранится в data в перевёрнутом виде для простоты операций
 
 	std::vector<int> data;
@@ -35,6 +41,11 @@ bool operator<(const BigInteger&, const BigInteger&);
 bool operator<=(const BigInteger&, const BigInteger&);
 bool operator>(const BigInteger&, const BigInteger&);
 bool operator>=(const BigInteger&, const BigInteger&);
+BigInteger operator+(const BigInteger&, const BigInteger&);
+BigInteger operator-(const BigInteger&, const BigInteger&);
+BigInteger operator*(const BigInteger&, const BigInteger&);
+BigInteger operator/(const BigInteger&, const BigInteger&);
+BigInteger operator%(const BigInteger&, const BigInteger&);
 
 BigInteger operator""_bi(unsigned long long);
 std::ostream& operator<<(std::ostream&, const BigInteger&);
