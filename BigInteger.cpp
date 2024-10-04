@@ -101,6 +101,14 @@ std::string BigInteger::toString() const
 	return answ; // RVO
 }
 
+BigInteger BigInteger::abs() const
+{
+	BigInteger tmp = *this;
+	if (isNegat)
+		tmp.isNegat = false;
+	return tmp;
+}
+
 int& BigInteger::operator[](size_t index)
 {
 	if (index >= data.size())
@@ -128,12 +136,39 @@ BigInteger BigInteger::operator-() const
 	return negative;
 }
 
+BigInteger& BigInteger:: operator++()
+{
+	*this += 1;
+	return *this;
+}
+
+BigInteger BigInteger::operator++(int)
+{
+	BigInteger copy = *this;
+	*this += 1;
+	return copy;
+}
+
+BigInteger& BigInteger::operator--()
+{
+	*this -= 1;
+	return *this;
+}
+
+BigInteger BigInteger::operator--(int)
+{
+	BigInteger copy = *this;
+	*this -= 1;
+	return copy;
+}
+
+
 BigInteger& BigInteger::operator+=(const BigInteger& x)
 {
 	if (isNegat && x.isNegat)			// - -
 	{
 		isNegat = false;	// так быстрее,чем арифметические операции
-		return (this->operator+=(-x));
+		return *this += (-x);
 		isNegat = true;
 		return *this;
 	}
@@ -143,7 +178,7 @@ BigInteger& BigInteger::operator+=(const BigInteger& x)
 		return *this = x - *this;	// ?избавиться от копирования?
 	}
 	if (!isNegat && x.isNegat)			// + -
-		return this->operator-=(-x);
+		return *this -= (-x);
 
 
 	size_t minSize = std::min(size, x.size);

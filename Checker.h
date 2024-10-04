@@ -62,8 +62,8 @@ public:
 	enum class status
 	{
 		undef = -1,
-		good,
-		bad
+		bad,
+		good
 	};
 
 	CheckStatus(status);

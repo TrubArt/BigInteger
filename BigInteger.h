@@ -15,10 +15,16 @@ public:
 	size_t intSize() const;
 	std::string toString() const;
 
+	BigInteger abs() const;
+
 	int& operator[](size_t);
 	const int& operator[](size_t) const;
 	BigInteger operator+() const;
 	BigInteger operator-() const;
+	BigInteger& operator++();
+	BigInteger operator++(int);
+	BigInteger& operator--();
+	BigInteger operator--(int);
 	BigInteger& operator+=(const BigInteger&);
 	BigInteger& operator-=(const BigInteger&);
 	BigInteger& operator*=(const BigInteger&);
@@ -28,6 +34,7 @@ public:
 private:
 	void shrinkToFit();
 	void increaseData(int);
+
 	// число хранится в data в перевёрнутом виде для простоты операций
 
 	std::vector<int> data;
