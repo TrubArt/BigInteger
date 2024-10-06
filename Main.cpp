@@ -41,6 +41,6 @@ void checkCreate()
 void checkEqua()
 {
 	Checker ch(-100, 100);
-	std::cout << "Сложение - " << ch.checkOperation(OperationEnum{ OperationEnum::operation::addition }) << "\n";
-	std::cout << "Вычитание - " << ch.checkOperation(OperationEnum{ OperationEnum::operation::subtraction}) << "\n";
+	std::cout << "Сложение - " << ch.checkOperation(OperationEnum(OperationEnum::operation::addition)) << "\n";
+	std::cout << "Вычитание - " << ch.checkOperation(OperationEnum(OperationEnum::operation::subtraction)) << "\n";
 }

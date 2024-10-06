@@ -85,6 +85,7 @@ public:
 
 	StatusEnum(status);
 	StatusEnum(bool);
+	operator status() const;
 	std::string name() const;
 	int id() const;
 

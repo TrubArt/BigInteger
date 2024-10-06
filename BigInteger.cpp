@@ -28,16 +28,15 @@ BigInteger::BigInteger() : BigInteger(0)
 
 BigInteger::BigInteger(long long x) : data(), isNegat(false), size(0)
 {
-	if (x == 0)
-	{
-		increaseData(0);
-	}
 	if (x < 0)
 	{
 		isNegat = true;
 		x *= -1;
 	}
-
+	if (x == 0)
+	{
+		increaseData(0);
+	}
 	while (x != 0)
 	{
 		increaseData(x % 10);
@@ -68,7 +67,11 @@ BigInteger::BigInteger(const std::string& str) : data(), isNegat(false), size(0)
 void BigInteger::shrinkToFit()
 {	
 	if (isNULL())
+	{
+		data.resize(1);
+		size = 1;
 		return;
+	}
 
 	auto lastSpace = data.end();
 	auto firstSpace = lastSpace - 1;
@@ -181,7 +184,7 @@ BigInteger& BigInteger::operator+=(const BigInteger& x)
 	if (isNegat && x.isNegat)			// - -
 	{
 		isNegat = false;	// так быстрее,чем арифметические операции
-		return *this += (-x);
+		*this += (-x);
 		isNegat = true;
 		return *this;
 	}

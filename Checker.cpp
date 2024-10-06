@@ -108,6 +108,11 @@ StatusEnum::StatusEnum(status st) : st(st)
 StatusEnum::StatusEnum(bool flag) : st(flag ? status::good : status::bad)
 {}
 
+StatusEnum::operator status() const
+{
+	return st;
+}
+
 std::string StatusEnum::name() const
 {
 	switch (st)
@@ -143,35 +148,16 @@ Checker::Checker(int firstLB, int firstUB, int secondLB, int secondUB)
 StatusEnum Checker::checkOperation(OperationEnum op) const
 {
 	using oper = OperationEnum::operation;
+	OperationInFile file(op, "error" + op.name() + ".txt");
+
 	switch (op)
 	{
-	case oper::addition:
-	{
-		OperationInFile file(oper::addition, "error" + op.name() + ".txt");
-		return !findError(file, additionFunc<BigInteger>, additionFunc<int>);
-	}
-	case oper::subtraction:
-	{
-		OperationInFile file(oper::subtraction, "error" + op.name() + ".txt");
-		return !findError(file, subtractionFunc<BigInteger>, additionFunc<int>);
-	}
-	case oper::multi:
-	{
-		OperationInFile file(oper::multi, "error" + op.name() + ".txt");
-		return !findError(file, multiFunc<BigInteger>, additionFunc<int>);
-	}
-	case oper::division:
-	{
-		OperationInFile file(oper::division, "error" + op.name() + ".txt");
-		return !findError(file, divisionFunc<BigInteger>, additionFunc<int>);
-	}
-	case oper::remainder:
-	{
-		OperationInFile file(oper::remainder, "error" + op.name() + ".txt");
-		return !findError(file, remainderFunc<BigInteger>, additionFunc<int>);
-	}
-	default:
-		return StatusEnum(StatusEnum::status::undef);
+	case oper::addition: return !findError(file, additionFunc<BigInteger>, additionFunc<int>);
+	case oper::subtraction: return !findError(file, subtractionFunc<BigInteger>, additionFunc<int>);
+	case oper::multi: return !findError(file, multiFunc<BigInteger>, additionFunc<int>);
+	case oper::division: return !findError(file, divisionFunc<BigInteger>, additionFunc<int>);
+	case oper::remainder: return !findError(file, remainderFunc<BigInteger>, additionFunc<int>);
+	default: return StatusEnum(StatusEnum::status::undef);
 	}
 }
 
@@ -187,7 +173,7 @@ bool Checker::findError(OperationInFile& file, std::function<BigInteger(const Bi
 
 	for (int x1 = firstNum.first; x1 <= firstNum.second; ++x1)
 	{
-		if (x1 % intervalMessage == 0)
+		if (intervalMessage && x1 % intervalMessage == 0)
 			std::cout << "x1: " << x1 << "\n";
 		bx1 = x1;
 		for (int x2 = secondNum.first; x2 <= secondNum.second; ++x2)
