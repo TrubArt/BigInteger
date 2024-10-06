@@ -10,6 +10,17 @@ namespace
 				answ.erase(i, 1);
 		return answ;
 	}
+
+	size_t findFirstNotNullIndex(size_t indStart, const std::vector<int>& vec)
+	{
+		for (size_t ind = indStart + 1; ind < vec.size(); ++ind)
+		{
+			if (vec[ind] != 0)
+				return ind;
+		}
+		throw std::exception("unreal situtaion in subtraction\n");
+		return 0;	// тк на вход идёт подходящий вектор, в эту строчку программа никогда не зайдёт
+	}
 }
 
 BigInteger::BigInteger() : BigInteger(0) 
@@ -165,6 +176,8 @@ BigInteger BigInteger::operator--(int)
 
 BigInteger& BigInteger::operator+=(const BigInteger& x)
 {
+	//std::cout << "Сумма: " << *this << " " << x << "\n";
+	// определение знаков
 	if (isNegat && x.isNegat)			// - -
 	{
 		isNegat = false;	// так быстрее,чем арифметические операции
@@ -173,10 +186,7 @@ BigInteger& BigInteger::operator+=(const BigInteger& x)
 		return *this;
 	}
 	if (isNegat)						// - +
-	{
-		isNegat = false;
-		return *this = x - *this;	// ?избавиться от копирования?
-	}
+		return *this = x - (-*this); // ?избавиться от копирования?
 	if (!isNegat && x.isNegat)			// + -
 		return *this -= (-x);
 
@@ -186,17 +196,17 @@ BigInteger& BigInteger::operator+=(const BigInteger& x)
 	int transfer = 0;	// остаток
 
 	// вычисление совпадающих разрядов
-	int sum = 0;
 	for (size_t index = 0; index < minSize; ++index)
 	{
-		sum = data[index] + x.data[index] + transfer;
-		transfer = sum / 10;
-		data[index] = sum % 10;
+		data[index] += x.data[index] + transfer;
+		transfer = data[index] / 10;
+		data[index] %= 10;
 	}
 
 	// вычисление оставшихся разрядов
 	if (minSize == size)	// if вынесен за пределы цикла ради уменьшения числа итераций
 	{
+		int sum = 0;
 		for (size_t count = minSize; count < maxSize; ++count)
 		{
 			sum = x.data[count] + transfer;
@@ -208,9 +218,9 @@ BigInteger& BigInteger::operator+=(const BigInteger& x)
 	{
 		for (size_t count = minSize; count < maxSize; ++count)
 		{
-			sum = data[count] + transfer;
-			transfer = sum / 10;
-			data[count] = sum % 10;
+			data[count] += transfer;
+			transfer = data[count] / 10;
+			data[count] %= 10;
 		}
 	}
 
@@ -222,6 +232,48 @@ BigInteger& BigInteger::operator+=(const BigInteger& x)
 
 BigInteger& BigInteger::operator-=(const BigInteger& x)
 {
+	//std::cout << "Разность: " << *this << " " << x << "\n";
+	// определение знаков
+	if (!isNegat && x.isNegat)		// + -
+		return *this += (-x);
+	if (isNegat && x.isNegat)		// - -
+		return *this = (-x) - (-*this);
+	if (isNegat)					// - +
+	{
+		isNegat = false;
+		*this += x;
+		isNegat = true;
+		return *this;
+	}
+
+	// проверка корректности вычитания
+	if (*this < x)
+	{
+		*this = x - *this;
+		isNegat = true;
+		return *this;
+	}
+
+	// вычисление совпадающих разрядов
+	for (size_t index = 0; index < x.size; ++index)
+	{
+		if (data[index] < x.data[index])
+		{
+			size_t creditor = findFirstNotNullIndex(index, data);
+			data[creditor] -= 1;		// отдаём займ
+			// обработка лучая займа у нулей
+			for (creditor -= 1; creditor != index; --creditor)
+			{
+				data[creditor] = 9;
+			}
+
+			data[index] += 10;			// получение займа
+		}
+
+		data[index] -= x.data[index];
+	}
+
+	shrinkToFit();
 	return *this;
 }
 
@@ -278,7 +330,10 @@ bool operator<(const BigInteger& a, const BigInteger& b)
 	{
 		if (a.intSize() > b.intSize())		// сравнение размерностей
 			return true;
+		if (a.intSize() < b.intSize())
+			return false;
 
+		// случай равенства размерностей
 		for (size_t ind = 0, size = astr.size(); ind < size; ++ind)
 		{
 			if (astr[ind] != bstr[ind])
@@ -293,6 +348,10 @@ bool operator<(const BigInteger& a, const BigInteger& b)
 
 	if (a.intSize() > b.intSize())		// сравнение размерностей
 		return false;
+	if (a.intSize() < b.intSize())
+		return true;
+
+	// случай равенства размерностей
 	for (size_t ind = 0, size = astr.size(); ind < size; ++ind)
 	{
 		if (astr[ind] != bstr[ind])
@@ -302,7 +361,7 @@ bool operator<(const BigInteger& a, const BigInteger& b)
 			return true;
 		}
 	}
-	return false; // случай равенства
+	return false;
 }
 
 bool operator<=(const BigInteger& a, const BigInteger& b)

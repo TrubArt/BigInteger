@@ -4,17 +4,15 @@
 #include <fstream>
 #include <string>
 
+class StatusEnum;
 class OperationInFile;
-class CheckStatus;
 
 
-
-// проверяет правильность написания класса BigInteger
-// сравнивает полученные после арифмитических операций значения BigInteger с правильными int-овыми вычислениями
-class Checker
+// класс-оболочка для enum operation
+class OperationEnum
 {
 public:
-	enum class operation 
+	enum class operation
 	{
 		addition,
 		subtraction,
@@ -23,15 +21,33 @@ public:
 		remainder
 	};
 
-	Checker(int, int);
-	Checker(int, int, int, int);
-	CheckStatus checkOperation(operation) const;
+	OperationEnum(operation);
+	operator operation() const;
+	std::string name() const;
+	int id() const;
 
 private:
-	bool check(OperationInFile&, std::function<BigInteger(const BigInteger&, const BigInteger&)>, std::function<int(int, int)>) const;
+	operation op;
+};
+std::ostream& operator<<(std::ostream&, const OperationEnum&);
 
-	std::pair<int, int> firstNum;
-	std::pair<int, int> secondNum;
+
+
+
+// проверяет правильность написания класса BigInteger
+// сравнивает полученные после арифмитических операций значения BigInteger с правильными int-овыми вычислениями
+class Checker
+{
+public:
+	Checker(int, int);
+	Checker(int, int, int, int);
+	StatusEnum checkOperation(OperationEnum) const;
+
+private:
+	bool findError(OperationInFile& file, std::function<BigInteger(const BigInteger&, const BigInteger&)>, std::function<int(int, int)>) const;
+
+	std::pair<int, int> firstNum;	// диапазон первого числа
+	std::pair<int, int> secondNum;	// диапазон второго числа
 };
 
 
@@ -41,22 +57,23 @@ private:
 // с какими числами неправльно работают вычисления
 class OperationInFile
 {
-	using oper = Checker::operation;
-
 public:
-	OperationInFile(Checker::operation op, const std::string& = "errors.txt");
-	void setOperation(Checker::operation op);
+	OperationInFile(const std::string & = "errors.txt");
+	OperationInFile(OperationEnum op, const std::string& = "errors.txt");
+	~OperationInFile();
+	void setOperation(OperationEnum op);
 	void putInFile(int, int);
 
 private:
 	std::ofstream file;
-	oper op;
+	OperationEnum op;
 };
 
 
 
+
 // класс-оболочка для enum status
-class CheckStatus
+class StatusEnum
 {
 public:
 	enum class status
@@ -66,12 +83,12 @@ public:
 		good
 	};
 
-	CheckStatus(status);
-	CheckStatus(bool);
+	StatusEnum(status);
+	StatusEnum(bool);
 	std::string name() const;
 	int id() const;
 
 private:
 	status st;
 };
-std::ostream& operator<<(std::ostream&, const CheckStatus&);
+std::ostream& operator<<(std::ostream&, const StatusEnum&);
