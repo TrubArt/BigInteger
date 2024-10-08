@@ -35,7 +35,7 @@ BigInteger::BigInteger(long long x) : data(), isNegat(false), size(0)
 	}
 	if (x == 0)
 	{
-		increaseData(0);
+		makeNULL();
 	}
 	while (x != 0)
 	{
@@ -64,12 +64,21 @@ BigInteger::BigInteger(const std::string& str) : data(), isNegat(false), size(0)
 	shrinkToFit();
 }
 
+BigInteger::BigInteger(const std::vector<int>& x, bool sign) : data(x), isNegat(sign), size(data.size())
+{}
+
+void BigInteger::makeNULL()
+{
+	data.clear();
+	size = 0;
+	increaseData(0);
+}
+
 void BigInteger::shrinkToFit()
 {	
 	if (isNULL())
 	{
-		data.resize(1);
-		size = 1;
+		makeNULL();
 		return;
 	}
 
@@ -150,29 +159,29 @@ BigInteger BigInteger::operator-() const
 	return negative;
 }
 
-BigInteger& BigInteger:: operator++()
+BigInteger& BigInteger::operator++()
 {
-	*this += 1;
+	*this += 1_bi;
 	return *this;
 }
 
 BigInteger BigInteger::operator++(int)
 {
 	BigInteger copy = *this;
-	*this += 1;
+	*this += 1_bi;
 	return copy;
 }
 
 BigInteger& BigInteger::operator--()
 {
-	*this -= 1;
+	*this -= 1_bi;
 	return *this;
 }
 
 BigInteger BigInteger::operator--(int)
 {
 	BigInteger copy = *this;
-	*this -= 1;
+	*this -= 1_bi;
 	return copy;
 }
 
@@ -282,7 +291,33 @@ BigInteger& BigInteger::operator-=(const BigInteger& x)
 
 BigInteger& BigInteger::operator*=(const BigInteger& x)
 {
-	return *this;
+	BigInteger answer(std::vector<int>(size + x.size), true);
+
+	// определение знака
+	if (isNegat ^ x.isNegat)	// разные знаки
+		answer.isNegat = true;
+	else
+		answer.isNegat = false;
+
+	for (size_t x2Ind = 0; x2Ind < x.size; ++x2Ind)
+	{
+		for (size_t x1Ind = 0; x1Ind < size; ++x1Ind)
+		{
+			answer.data[x2Ind + x1Ind] += x.data[x2Ind] * data[x1Ind];
+		}
+	}
+
+	// перенос разрядов
+	int shift = 0;
+	for (auto& i : answer.data)
+	{
+		i += shift;
+		shift = i / 10;
+		i %= 10;
+	}
+
+	answer.shrinkToFit();
+	return *this = answer;
 }
 
 BigInteger& BigInteger::operator/=(const BigInteger& x)
@@ -297,6 +332,10 @@ BigInteger& BigInteger::operator%=(const BigInteger& x)
 
 bool operator==(const BigInteger& a, const BigInteger& b)
 {
+	// hardcode 0, becouse (-0 = 0)
+	if (a.isNULL() && b.isNULL())
+		return true;
+
 	if (a.intSize() != b.intSize())
 		return false;
 	if (a.isNegative() != b.isNegative())
@@ -320,6 +359,10 @@ bool operator!=(const BigInteger& a, const BigInteger& b)
 
 bool operator<(const BigInteger& a, const BigInteger& b)
 {
+	// hardcode 0, becouse (-0 = 0)
+	if (a.isNULL() && b.isNULL())
+		return false;
+
 	if (a.isNegative() ^ b.isNegative())	// разные знаки
 	{
 		if (a.isNegative())

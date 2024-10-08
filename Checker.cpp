@@ -52,11 +52,11 @@ std::string OperationEnum::name() const
 {
 	switch (op)
 	{
-	case operation::addition: return "+";
-	case operation::subtraction: return "-";
-	case operation::multi: return "*";
-	case operation::division: return "/";
-	case operation::remainder: return "%";
+	case operation::addition: return "addition";
+	case operation::subtraction: return "subtraction";
+	case operation::multi: return "multi";
+	case operation::division: return "division";
+	case operation::remainder: return "remainder";
 	default: return "undefOperation";
 	}
 }
@@ -153,10 +153,10 @@ StatusEnum Checker::checkOperation(OperationEnum op) const
 	switch (op)
 	{
 	case oper::addition: return !findError(file, additionFunc<BigInteger>, additionFunc<int>);
-	case oper::subtraction: return !findError(file, subtractionFunc<BigInteger>, additionFunc<int>);
-	case oper::multi: return !findError(file, multiFunc<BigInteger>, additionFunc<int>);
-	case oper::division: return !findError(file, divisionFunc<BigInteger>, additionFunc<int>);
-	case oper::remainder: return !findError(file, remainderFunc<BigInteger>, additionFunc<int>);
+	case oper::subtraction: return !findError(file, subtractionFunc<BigInteger>, subtractionFunc<int>);
+	case oper::multi: return !findError(file, multiFunc<BigInteger>, multiFunc<int>);
+	case oper::division: return !findError(file, divisionFunc<BigInteger>, divisionFunc<int>);
+	case oper::remainder: return !findError(file, remainderFunc<BigInteger>, remainderFunc<int>);
 	default: return StatusEnum(StatusEnum::status::undef);
 	}
 }

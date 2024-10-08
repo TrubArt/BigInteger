@@ -54,14 +54,14 @@ private:
 
 
 // записывает данные в файл. Нужен для того, чтобы посмотреть
-// с какими числами неправльно работают вычисления
+// с какими числами неправильно работают вычисления
 class OperationInFile
 {
 public:
 	OperationInFile(const std::string & = "errors.txt");
-	OperationInFile(OperationEnum op, const std::string& = "errors.txt");
+	OperationInFile(OperationEnum, const std::string& = "errors.txt");
 	~OperationInFile();
-	void setOperation(OperationEnum op);
+	void setOperation(OperationEnum);
 	void putInFile(int, int);
 
 private:

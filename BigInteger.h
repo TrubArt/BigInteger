@@ -32,6 +32,8 @@ public:
 	BigInteger& operator%=(const BigInteger&);
 
 private:
+	BigInteger(const std::vector<int>&, bool);
+	void makeNULL();
 	void shrinkToFit();
 	void increaseData(int);
 

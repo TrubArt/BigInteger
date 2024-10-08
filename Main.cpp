@@ -12,7 +12,7 @@ int main()
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
 
-	//checkCreate();
+	checkCreate();
 	checkEqua();
 }
 
@@ -43,4 +43,5 @@ void checkEqua()
 	Checker ch(-100, 100);
 	std::cout << "Сложение - " << ch.checkOperation(OperationEnum(OperationEnum::operation::addition)) << "\n";
 	std::cout << "Вычитание - " << ch.checkOperation(OperationEnum(OperationEnum::operation::subtraction)) << "\n";
+	std::cout << "Умножение - " << ch.checkOperation(OperationEnum(OperationEnum::operation::multi)) << "\n";
 }
