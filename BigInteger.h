@@ -9,6 +9,7 @@ public:
 	BigInteger();
 	BigInteger(long long);
 	BigInteger(const std::string&);
+	BigInteger(const std::vector<int>&, bool = false);
 
 	bool isNULL() const;
 	bool isNegative() const;
@@ -32,10 +33,11 @@ public:
 	BigInteger& operator%=(const BigInteger&);
 
 private:
-	BigInteger(const std::vector<int>&, bool);
-	void makeNULL();
-	void shrinkToFit();
+	static BigInteger stupidVectorCreate(const std::vector<int>&, bool = false);
+	BigInteger& makeNULL();
+	BigInteger& shrinkToFit();
 	void increaseData(int);
+	BigInteger findRemainder(const BigInteger&);
 
 	// число хранится в data в перевёрнутом виде для простоты операций
 

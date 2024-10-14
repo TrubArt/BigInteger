@@ -21,12 +21,48 @@ namespace
 		throw std::exception("unreal situtaion in subtraction\n");
 		return 0;	// тк на вход идёт подходящий вектор, в эту строчку программа никогда не зайдёт
 	}
+
+	// функция конвертации BigInteger в std::vector
+	// Знак не учитывается
+	// Вспомогательная для оператора деления
+	std::vector<int> toVec(const BigInteger& x)
+	{
+		std::vector<int> answer;
+		for (size_t ind = 0; ind < x.intSize(); ++ind)
+		{
+			answer.push_back(x[ind]);
+		}
+		return answer;
+	}
+
+	// (A/B) Возвращает (x(наибольшую цифру, на которую надо домножить B, чтобы оно было меньше A), B * x)
+	// Работает методом бинарного поиска. Максимум 4 итерации
+	// Вспомогательная для оператора деления
+	int findMultiplyable(const BigInteger& A, const BigInteger& B)
+	{
+		int start = 1;
+		int end = 10;
+		int midle = 0;
+		BigInteger number;
+		do
+		{
+			midle = (start + end) / 2;
+			number = B * midle;
+
+			if (number <= A)
+				start = midle;
+			else
+				end = midle;
+		} while (end - start != 1);
+
+		return start;
+	}
 }
 
 BigInteger::BigInteger() : BigInteger(0) 
 {}
 
-BigInteger::BigInteger(long long x) : data(), isNegat(false), size(0)
+BigInteger::BigInteger(long long x) : data(), size(0), isNegat(false)
 {
 	if (x < 0)
 	{
@@ -44,7 +80,7 @@ BigInteger::BigInteger(long long x) : data(), isNegat(false), size(0)
 	}
 }
 
-BigInteger::BigInteger(const std::string& str) : data(), isNegat(false), size(0)
+BigInteger::BigInteger(const std::string& str) : data(), size(0), isNegat(false)
 {
 	data.reserve(str.size());
 	std::string goodStr = getStringWithoutSpace(str);
@@ -64,22 +100,38 @@ BigInteger::BigInteger(const std::string& str) : data(), isNegat(false), size(0)
 	shrinkToFit();
 }
 
-BigInteger::BigInteger(const std::vector<int>& x, bool sign) : data(x), isNegat(sign), size(data.size())
-{}
+BigInteger::BigInteger(const std::vector<int>& x, bool sign) : data(), size(x.size()), isNegat(sign)
+{
+	data.reserve(x.size());
+	for (auto revIt = x.rbegin(); revIt != x.rend(); ++revIt)
+	{
+		data.push_back(*revIt);
+	}
+	shrinkToFit();
+}
 
-void BigInteger::makeNULL()
+BigInteger BigInteger::stupidVectorCreate(const std::vector<int>& x, bool sign)
+{
+	BigInteger answer; 
+	answer.data = x;
+	answer.size = x.size();
+	answer.isNegat = sign;
+	return answer;
+}
+
+BigInteger& BigInteger::makeNULL()
 {
 	data.clear();
 	size = 0;
 	increaseData(0);
+	return *this;
 }
 
-void BigInteger::shrinkToFit()
+BigInteger& BigInteger::shrinkToFit()
 {	
 	if (isNULL())
 	{
-		makeNULL();
-		return;
+		return makeNULL();
 	}
 
 	auto lastSpace = data.end();
@@ -90,12 +142,45 @@ void BigInteger::shrinkToFit()
 		--size;
 	}
 	data.erase(firstSpace + 1, lastSpace);
+	return *this;
 }
 
 void BigInteger::increaseData(int value)
 {
 	data.push_back(value);
 	++size;
+}
+
+// возвращает остаток от деления
+BigInteger BigInteger::findRemainder(const BigInteger& b)
+{
+	if (b.isNULL())
+		throw std::exception("NULL division\n");
+
+	// можно оптимизировать и найти первый tmpNumber за 1 сравнение
+	// предварительно необходимо tmpNumber сделать равным *this[0,b.size)
+	// тогда if (tmpNumber < b) tmpNumber = *this[0,b.size]
+
+	std::vector<int> tmpNumber;
+	for (auto index = data.rbegin(); index != data.rend(); ++index)
+	{
+		tmpNumber.push_back(*index);
+
+		// if необходим для оптимизации. Если убирать if, то необходимо сделать start = 0 в функции findMultiplyable
+		if (static_cast<BigInteger>(tmpNumber) < b)
+			*index = 0;
+		else
+		{
+			// число - ans, BigInteger - b * ans
+			int num = findMultiplyable(tmpNumber, b);
+
+			//std::cout << numAndBi.first << " " << numAndBi.second << "\n";
+
+			*index = num;
+			tmpNumber = toVec(static_cast<BigInteger>(tmpNumber) - num * b);
+		}
+	}
+	return tmpNumber;
 }
 
 bool BigInteger::isNULL() const
@@ -126,7 +211,7 @@ std::string BigInteger::toString() const
 
 BigInteger BigInteger::abs() const
 {
-	BigInteger tmp = *this;
+	BigInteger tmp(*this);
 	if (isNegat)
 		tmp.isNegat = false;
 	return tmp;
@@ -161,56 +246,53 @@ BigInteger BigInteger::operator-() const
 
 BigInteger& BigInteger::operator++()
 {
-	*this += 1_bi;
-	return *this;
+	return *this += 1_bi;
 }
 
 BigInteger BigInteger::operator++(int)
 {
-	BigInteger copy = *this;
-	*this += 1_bi;
+	BigInteger copy(*this);
+	++(*this);
 	return copy;
 }
 
 BigInteger& BigInteger::operator--()
 {
-	*this -= 1_bi;
-	return *this;
+	return *this -= 1_bi;
 }
 
 BigInteger BigInteger::operator--(int)
 {
-	BigInteger copy = *this;
-	*this -= 1_bi;
+	BigInteger copy(*this);
+	--(*this);
 	return copy;
 }
 
 
-BigInteger& BigInteger::operator+=(const BigInteger& x)
+BigInteger& BigInteger::operator+=(const BigInteger& b)
 {
-	//std::cout << "Сумма: " << *this << " " << x << "\n";
 	// определение знаков
-	if (isNegat && x.isNegat)			// - -
+	if (isNegat && b.isNegat)			// - -
 	{
 		isNegat = false;	// так быстрее,чем арифметические операции
-		*this += (-x);
+		*this += (-b);
 		isNegat = true;
 		return *this;
 	}
 	if (isNegat)						// - +
-		return *this = x - (-*this); // ?избавиться от копирования?
-	if (!isNegat && x.isNegat)			// + -
-		return *this -= (-x);
+		return *this = b - (-*this); // ?избавиться от копирования?
+	if (!isNegat && b.isNegat)			// + -
+		return *this -= (-b);
 
 
-	size_t minSize = std::min(size, x.size);
-	size_t maxSize = std::max(size, x.size);
+	size_t minSize = std::min(size, b.size);
+	size_t maxSize = std::max(size, b.size);
 	int transfer = 0;	// остаток
 
 	// вычисление совпадающих разрядов
 	for (size_t index = 0; index < minSize; ++index)
 	{
-		data[index] += x.data[index] + transfer;
+		data[index] += b.data[index] + transfer;
 		transfer = data[index] / 10;
 		data[index] %= 10;
 	}
@@ -221,7 +303,7 @@ BigInteger& BigInteger::operator+=(const BigInteger& x)
 		int sum = 0;
 		for (size_t count = minSize; count < maxSize; ++count)
 		{
-			sum = x.data[count] + transfer;
+			sum = b.data[count] + transfer;
 			transfer = sum / 10;
 			increaseData(sum % 10);
 		}
@@ -242,34 +324,33 @@ BigInteger& BigInteger::operator+=(const BigInteger& x)
 	return *this;
 }
 
-BigInteger& BigInteger::operator-=(const BigInteger& x)
+BigInteger& BigInteger::operator-=(const BigInteger& b)
 {
-	//std::cout << "Разность: " << *this << " " << x << "\n";
 	// определение знаков
-	if (!isNegat && x.isNegat)		// + -
-		return *this += (-x);
-	if (isNegat && x.isNegat)		// - -
-		return *this = (-x) - (-*this);
+	if (!isNegat && b.isNegat)		// + -
+		return *this += (-b);
+	if (isNegat && b.isNegat)		// - -
+		return *this = (-b) - (-*this);
 	if (isNegat)					// - +
 	{
 		isNegat = false;
-		*this += x;
+		*this += b;
 		isNegat = true;
 		return *this;
 	}
 
 	// проверка корректности вычитания
-	if (*this < x)
+	if (*this < b)
 	{
-		*this = x - *this;
+		*this = b - *this;
 		isNegat = true;
 		return *this;
 	}
 
 	// вычисление совпадающих разрядов
-	for (size_t index = 0; index < x.size; ++index)
+	for (size_t index = 0; index < b.size; ++index)
 	{
-		if (data[index] < x.data[index])
+		if (data[index] < b.data[index])
 		{
 			size_t creditor = findFirstNotNullIndex(index, data);
 			data[creditor] -= 1;		// отдаём займ
@@ -282,28 +363,24 @@ BigInteger& BigInteger::operator-=(const BigInteger& x)
 			data[index] += 10;			// получение займа
 		}
 
-		data[index] -= x.data[index];
+		data[index] -= b.data[index];
 	}
 
-	shrinkToFit();
-	return *this;
+	return shrinkToFit();
 }
 
-BigInteger& BigInteger::operator*=(const BigInteger& x)
+BigInteger& BigInteger::operator*=(const BigInteger& b)
 {
-	BigInteger answer(std::vector<int>(size + x.size), true);
+	BigInteger answer = stupidVectorCreate(std::vector<int>(size + b.size), true);
 
-	// определение знака
-	if (isNegat ^ x.isNegat)	// разные знаки
-		answer.isNegat = true;
-	else
-		answer.isNegat = false;
+	// определение знака 
+	answer.isNegat = isNegat ^ b.isNegat;
 
-	for (size_t x2Ind = 0; x2Ind < x.size; ++x2Ind)
+	for (size_t x2Ind = 0; x2Ind < b.size; ++x2Ind)
 	{
 		for (size_t x1Ind = 0; x1Ind < size; ++x1Ind)
 		{
-			answer.data[x2Ind + x1Ind] += x.data[x2Ind] * data[x1Ind];
+			answer.data[x2Ind + x1Ind] += b.data[x2Ind] * data[x1Ind];
 		}
 	}
 
@@ -320,19 +397,34 @@ BigInteger& BigInteger::operator*=(const BigInteger& x)
 	return *this = answer;
 }
 
-BigInteger& BigInteger::operator/=(const BigInteger& x)
+BigInteger& BigInteger::operator/=(const BigInteger& b)
 {
-	return *this;
+	// можно оптимизировать путём игры со знаками, без дополнительных копирований
+	if (b.abs() > abs())
+		return makeNULL();
+	// определение знака
+	isNegat ^= b.isNegat;
+
+	findRemainder(b);
+
+	return shrinkToFit();
 }
 
-BigInteger& BigInteger::operator%=(const BigInteger& x)
+BigInteger& BigInteger::operator%=(const BigInteger& b)
 {
+	if (b.abs() > abs())
+		return *this;
+	// в с++ почему-то сохраняется знак
+	bool neg = isNegat;
+	*this = findRemainder(b);
+	isNegat = neg;
+
 	return *this;
 }
 
 bool operator==(const BigInteger& a, const BigInteger& b)
 {
-	// hardcode 0, becouse (-0 = 0)
+	// hardcode 0, because (-0 = 0)
 	if (a.isNULL() && b.isNULL())
 		return true;
 
@@ -359,7 +451,7 @@ bool operator!=(const BigInteger& a, const BigInteger& b)
 
 bool operator<(const BigInteger& a, const BigInteger& b)
 {
-	// hardcode 0, becouse (-0 = 0)
+	// hardcode 0, because (-0 = 0)
 	if (a.isNULL() && b.isNULL())
 		return false;
 
