@@ -11,12 +11,16 @@ public:
 	BigInteger(const std::string&);
 	BigInteger(const std::vector<int>&, bool = false);
 
+	explicit operator long long() const;
+
 	bool isNULL() const;
 	bool isNegative() const;
 	size_t intSize() const;
 	std::string toString() const;
 
 	BigInteger abs() const;
+	BigInteger powBadSlow(long long) const;
+	BigInteger powRightLeft(long long) const;
 
 	int& operator[](size_t);
 	const int& operator[](size_t) const;

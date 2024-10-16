@@ -1,5 +1,8 @@
 ﻿#include "BigInteger.h"
 
+// for bitPow
+#include <bitset>
+
 namespace
 {
 	std::string getStringWithoutSpace(const std::string& str)
@@ -110,6 +113,13 @@ BigInteger::BigInteger(const std::vector<int>& x, bool sign) : data(), size(x.si
 	shrinkToFit();
 }
 
+BigInteger::operator long long() const
+{
+	if (size > 20)
+		throw std::exception("unreal cast to long long");
+	return stoll(toString());
+}
+
 BigInteger BigInteger::stupidVectorCreate(const std::vector<int>& x, bool sign)
 {
 	BigInteger answer; 
@@ -215,6 +225,37 @@ BigInteger BigInteger::abs() const
 	if (isNegat)
 		tmp.isNegat = false;
 	return tmp;
+}
+
+BigInteger BigInteger::powBadSlow(long long power) const
+{
+	if (power < 0)
+		return BigInteger(0);
+
+	BigInteger answer = 1;
+	for (int count = 0; count < power; ++count)
+	{
+		answer *= (*this);
+	}
+	return answer;
+}
+
+BigInteger BigInteger::powRightLeft(long long power) const
+{
+	if (power < 0)
+		return BigInteger(0);
+
+	std::bitset<sizeof(power)> bitPower = power;
+	BigInteger answer = bitPower[0] == 1 ? *this : 1;
+	BigInteger tmpPowerValue = *this;
+
+	for (size_t ind = 1; ind < bitPower.size(); ++ind)
+	{
+		tmpPowerValue *= tmpPowerValue;
+		if (bitPower[ind] != 0)
+			answer *= tmpPowerValue;
+	}
+	return answer;
 }
 
 int& BigInteger::operator[](size_t index)

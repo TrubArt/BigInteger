@@ -3,6 +3,7 @@
 #include <iostream>
 #define NOMINMAX
 #include <Windows.h>
+#include <bitset>
 
 void checkCreate();
 void checkEqua();
@@ -11,6 +12,8 @@ int main()
 {
 	SetConsoleCP(1251);
 	SetConsoleOutputCP(1251);
+
+	//std::cout << tmp.count() << "\n";
 	//checkCreate();
 	checkEqua();
 }
