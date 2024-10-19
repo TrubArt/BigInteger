@@ -21,7 +21,7 @@ namespace
 			if (vec[ind] != 0)
 				return ind;
 		}
-		throw std::exception("unreal situtaion in subtraction\n");
+		throw std::exception("vec is NULL in subtraction\n");
 		return 0;	// тк на вход идёт подходящий вектор, в эту строчку программа никогда не зайдёт
 	}
 
@@ -164,9 +164,6 @@ void BigInteger::increaseData(int value)
 // возвращает остаток от деления
 BigInteger BigInteger::findRemainder(const BigInteger& b)
 {
-	if (b.isNULL())
-		throw std::exception("NULL division\n");
-
 	// можно оптимизировать и найти первый tmpNumber за 1 сравнение
 	// предварительно необходимо tmpNumber сделать равным *this[0,b.size)
 	// тогда if (tmpNumber < b) tmpNumber = *this[0,b.size]
@@ -261,7 +258,7 @@ BigInteger BigInteger::powRightLeft(long long power) const
 int& BigInteger::operator[](size_t index)
 {
 	if (index >= data.size())
-		throw "fatal index";
+		throw std::out_of_range("fatal index");
 
 	return data[size - 1 - index];
 }
@@ -269,7 +266,7 @@ int& BigInteger::operator[](size_t index)
 const int& BigInteger::operator[](size_t index) const
 {
 	if (index >= data.size())
-		throw "fatal index";
+		throw std::out_of_range("fatal index");
 	return data[size - 1 - index];
 }
 
